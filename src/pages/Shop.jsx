@@ -6,12 +6,11 @@ function Shop() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch data from the Fake Store API
     fetch("https://fakestoreapi.com/products?limit=9")
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data); // Set the fetched data to state
-        setLoading(false); // Stop the loading spinner
+        setProducts(data);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
@@ -28,7 +27,7 @@ function Shop() {
 
   const handleChange = (id, value) => {
     const numericValue = parseInt(value, 10);
-    return isNaN(numericValue) ? 0 : numericValue; // Return the processed value
+    return isNaN(numericValue) ? 0 : numericValue;
   };
 
   const [cart, setCart] = useState([]);
@@ -38,10 +37,10 @@ function Shop() {
   };
 
   const handleRemove = (title) => {
-    setCart((prevCart) => prevCart.filter((item) => item.title !== title)); // Remove item by title
+    setCart((prevCart) => prevCart.filter((item) => item.title !== title));
     setQuantities((prevQuantities) => {
       const updatedQuantities = { ...prevQuantities };
-      delete updatedQuantities[title]; // Remove quantity for the removed item
+      delete updatedQuantities[title];
       return updatedQuantities;
     });
   };
@@ -57,9 +56,15 @@ function Shop() {
     const newQuantity = parseInt(value, 10);
     setQuantities((prevQuantities) => ({
       ...prevQuantities,
-      [id]: isNaN(newQuantity) || newQuantity < 1 ? 1 : newQuantity, // Ensure valid quantity
+      [id]: isNaN(newQuantity) || newQuantity < 1 ? 1 : newQuantity,
     }));
   };
+
+    const [isCartActive, setIsCartActive] = useState(false); // State for toggling
+
+    const toggleCart = () => {
+      setIsCartActive((prevState) => !prevState); // Toggle active state
+    };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -67,13 +72,14 @@ function Shop() {
 
   return (
     <div>
-      <button id="toggleCart">Cart</button>
-      <div id="shopDrawer">
+      <button id="toggleCart" onClick={toggleCart}>
+        Cart
+      </button>
+      <div id="shopDrawer" className={isCartActive ? "active" : ""}>
         <h2>Cart</h2>
         {cart.length > 0 ? (
           <ul>
             {cart.map((item) => {
-              // Fallback for quantity: use quantities[item.title] or default to 1
               const quantity = quantities[item.title] ?? 1;
               return (
                 <li key={item.title}>
@@ -81,7 +87,7 @@ function Shop() {
                   <input
                     id={item.title}
                     type="number"
-                    value={quantity} // Use the determined quantity
+                    value={quantity}
                     onChange={(e) =>
                       handleQuantityChange(item.title, e.target.value)
                     }
@@ -109,7 +115,7 @@ function Shop() {
         <button>Buy</button>
       </div>
       <div>
-        <h1>Products</h1>
+        <h1 className="shop">Products</h1>
         <ul className="product-list">
           {products.map((product) => (
             <li key={product.id} id={product.id}>
@@ -153,7 +159,7 @@ function Shop() {
           ))}
         </ul>
       </div>
-      <Link to="/">Home</Link>
+      <Link to="/">Back to Home</Link>
     </div>
   );
 }

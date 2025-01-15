@@ -1,14 +1,15 @@
-import { Link } from "react-router-dom";
+import Featured from "../components/fetured/Featured";
+import Hero from "../components/hero/Hero";
+import Shop from "../components/shop/Shop";
 
 function App() {
   return (
-    <>
-      <div>
-        <h1>Kockica</h1>
-				<Link to="shop">Shop</Link>
-      </div>
-    </>
-  )
+    <div className="homepage-body">
+      <Hero></Hero>
+      <Shop></Shop>
+      <Featured></Featured>
+    </div>
+  );
 }
 
-export default App
+export default App;
