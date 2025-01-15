@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 function Shop() {
   const [products, setProducts] = useState([]);
@@ -26,34 +26,38 @@ function Shop() {
     return description;
   };
 
-  const [amounts, setAmounts] = useState(
-    products.reduce((acc, product) => {
-      acc[product.id] = 0; // Initialize each product's amount to 0
-      console.log(acc[product.id]);
-      console.log(acc[product]);
+  const handleChange = (id, value) => {
+    const numericValue = parseInt(value, 10);
+    return isNaN(numericValue) ? 0 : numericValue; // Return the processed value
+  };
+
+  const [cart, setCart] = useState([]);
+
+  const handleAddToCart = (product) => {
+    setCart((prevCart) => [...prevCart, product]);
+  };
+
+  const handleRemove = (title) => {
+    setCart((prevCart) => prevCart.filter((item) => item.title !== title)); // Remove item by title
+    setQuantities((prevQuantities) => {
+      const updatedQuantities = { ...prevQuantities };
+      delete updatedQuantities[title]; // Remove quantity for the removed item
+      return updatedQuantities;
+    });
+  };
+
+  const [quantities, setQuantities] = React.useState(
+    cart.reduce((acc, item) => {
+      acc[item.title] = 1;
       return acc;
     }, {})
   );
 
-  const handleIncrement = (id) => {
-    setAmounts((prevAmounts) => ({
-      ...prevAmounts,
-      [id]: prevAmounts[id] + 1, // Increment the value
-    }));
-  };
-
-  const handleDecrement = (id) => {
-    setAmounts((prevAmounts) => ({
-      ...prevAmounts,
-      [id]: Math.max(0, prevAmounts[id] - 1), // Decrement but prevent going below 0
-    }));
-  };
-
-  const handleChange = (id, value) => {
-    const numericValue = parseInt(value, 10);
-    setAmounts((prevAmounts) => ({
-      ...prevAmounts,
-      [id]: isNaN(numericValue) ? 0 : numericValue, // Update with input value or reset to 0 if invalid
+  const handleQuantityChange = (id, value) => {
+    const newQuantity = parseInt(value, 10);
+    setQuantities((prevQuantities) => ({
+      ...prevQuantities,
+      [id]: isNaN(newQuantity) || newQuantity < 1 ? 1 : newQuantity, // Ensure valid quantity
     }));
   };
 
@@ -63,48 +67,90 @@ function Shop() {
 
   return (
     <div>
+      <button id="toggleCart">Cart</button>
+      <div id="shopDrawer">
+        <h2>Cart</h2>
+        {cart.length > 0 ? (
+          <ul>
+            {cart.map((item) => {
+              // Fallback for quantity: use quantities[item.title] or default to 1
+              const quantity = quantities[item.title] ?? 1;
+              return (
+                <li key={item.title}>
+                  <h3>{item.title}</h3>
+                  <input
+                    id={item.title}
+                    type="number"
+                    value={quantity} // Use the determined quantity
+                    onChange={(e) =>
+                      handleQuantityChange(item.title, e.target.value)
+                    }
+                  />
+                  <p>Total: ${(item.price * quantity).toFixed(2)}</p>
+                  <button onClick={() => handleRemove(item.title)}>
+                    Remove
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p>Your cart is empty.</p>
+        )}
+        <h3>
+          Total Price: $
+          {cart
+            .reduce(
+              (acc, item) => acc + item.price * (quantities[item.title] ?? 1),
+              0
+            )
+            .toFixed(2)}
+        </h3>
+        <button>Buy</button>
+      </div>
       <div>
         <h1>Products</h1>
         <ul className="product-list">
-          {products.map(
-            (product) =>
-              (amounts[product.id] = (
-                <li key={product.id}>
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    style={{ width: "100px" }}
-                  />
-                  <h2>{product.title}</h2>
-                  <p className="product-desc">
-                    {shortenDescription(product.description)}
-                  </p>
-                  <p>Price: ${product.price}</p>
-                  <div>
-                    <button
-                      id={`${product.id}-decrement`}
-                      onClick={() => handleDecrement(product.id)}
-                    >
-                      -
-                    </button>
-                    <input
-                      id={`${product.id}-amount`}
-                      name="amount"
-                      type="number"
-                      value={amounts[product.id]}
-                      onChange={(e) => handleChange(product.id, e.target.value)}
-                    />
-                    <button
-                      id={`${product.id}-increment`}
-                      onClick={() => handleIncrement(product.id)}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button id={`${product.id}-addToCart`}>Add to cart</button>
-                </li>
-              ))
-          )}
+          {products.map((product) => (
+            <li key={product.id} id={product.id}>
+              <img
+                src={product.image}
+                alt={product.title}
+                style={{ width: "100px" }}
+              />
+              <h2>{product.title}</h2>
+              <p className="product-desc">
+                {shortenDescription(product.description)}
+              </p>
+              <p>Price: ${product.price}</p>
+              <div>
+                <input
+                  id={`${product.id}-amount`}
+                  name="amount"
+                  type="number"
+                  defaultValue={1}
+                  onChange={(e) => {
+                    const updatedValue = handleChange(
+                      product.id,
+                      e.target.value
+                    );
+                    console.log(
+                      `Product ID: ${product.id}, Updated Value: ${updatedValue}`
+                    );
+                  }}
+                />
+              </div>
+              <button
+                id={`${product.id}-addToCart`}
+                onClick={() => handleAddToCart(product)}
+                disabled={cart.some((item) => item.id === product.id)}
+              >
+                {cart.some((item) => item.id === product.id)
+                  ? "In Cart"
+                  : "Add to cart"}
+              </button>
+            </li>
+          ))}
         </ul>
       </div>
       <Link to="/">Home</Link>
